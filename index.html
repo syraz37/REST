@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <meta charset="utf-8">
+        <title>REST</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <!-- Le styles -->
+        <link href="css/bootstrap.css" rel="stylesheet">
+        <link href="css/bootstrap-responsive.css" rel="stylesheet">
+
+        <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+        
+        <script type="text/javascript">
+            
+
+            $(function() {
+
+                var baseUrl = '';
+                var apis = null;
+
+                $.ajax({
+                    url: "api.json",
+                    dataType: 'json',
+                    success: function(data) {
+                        baseUrl = data.baseUrl;
+                        $('#request-url').val(baseUrl);
+
+                        apis = data.apis;
+                        $.each(apis, function(i, v){
+                            $('#select_api').append('<option value="'+i+'">'+v.api+'</option>')
+                        });
+                    }
+                });
+
+                $('#select_api').change(function(){
+                    var index = $(this).val();
+                    if(index == ""){
+                        $('#request-url').val(baseUrl);
+                        $('#request-data').html('');
+                    } else {
+                        $('#request-url').val(baseUrl + apis[index].api);
+                        $('#request-data').html('');
+                        $.each(apis[index].parameters, function (i,v) {
+                            var html = '<div class="form-group" style="margin: 5px;">'
+                                + '<label class="col-sm-2 control-label">' + i + ': &nbsp;</label>'
+                                + '<div class="col-sm-10"><input type="text" class="form-control" parameter="' + i + '" value="' + v + '"></div>'
+                            + '</div>';
+                            $('#request-data').append(html);
+                        })
+
+
+                                
+                    }
+                });
+
+                $('#request-send').on('click', function(){
+
+                    var valid = true;
+                    if($('#request-url').val() == '') {
+                        $('#request-error').append('<p>Please enter URL</p>');
+                        valid = false;
+                    }
+                    if(!valid)
+                        return;
+
+
+                    var dataToSend = {};
+                    $('#request-data input').each(function() {
+                        dataToSend[$(this).attr('parameter')] = $(this).val();
+                    });
+
+                    $.ajax({
+                        url: $('#request-url').val(),
+                        type: $('#request-method').val(),
+                        dataType: 'json',
+                        crossDomain: true,
+                        jsonp: true,
+                        data: JSON.stringify(dataToSend),
+                        async:false,
+                        contentType: "application/json; charset=utf-8",
+                        beforeSend: function() {
+                            $('#response-data').html('Loading...');
+                        },
+                        success: function(response){
+                            var html = print_r(response);
+                            $('#response-data').html("<pre>" + html + "</pre>");
+                        },
+                        error: function() {
+                            $('#response-data').html('Error')
+                        }
+                    });
+                });
+            });
+
+            String.prototype.repeat = function(times) {
+               return (new Array(times + 1)).join(this);
+            };
+
+            function print_r(variable, level = 0) {
+
+                level++;
+
+                var tab = "\t".repeat(level);
+                var tabend = "\t".repeat((level - 1));
+
+                var html = "";
+                if($.isArray(variable)) {
+
+                    html += "[\n";
+
+                    $.each(variable, function(key, val) {
+                        html += tab + print_r(val, level);
+                        html += (variable.length == key + 1) ? "\n" : ",\n";
+                    });
+
+                    html += tabend + "]";
+                } 
+                else if($.isPlainObject(variable)) {
+
+                    html += "{\n";
+
+                    var len = 0;
+                    $.each(variable, function(i, elem) {
+                        len++;
+                    });
+
+                    var index = 0
+                    $.each(variable, function(key, val) {
+                        html += tab + '"' + key + '": ' + print_r(val, level);
+                        html += (len == index + 1) ? "\n" : ",\n";
+                        index++;
+                    });
+
+                    html += tabend + "}";
+
+                } else if(typeof variable === "string"){
+
+                    return '"' + variable + '"';
+
+                } else {
+
+                    return variable;
+
+                }
+                return html;
+            }
+
+        </script>
+
+    </head>
+    
+    <body>
+
+        <div class="container-fluid">
+
+            <div class="row-fluid">
+                    
+                <div class="span12 well">
+
+                    <h2>REQUEST</h2>
+
+                    <div id="request-error"></div>
+
+                    <div id="request-form">
+                        <form class="form-inline" id="request_form">
+
+                            <select name="request-method" id="request-method" class="span2">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+
+                            <select id="select_api" class="span2">
+                                <option value="">select API</option>
+                            </select>
+
+                            <input type="text" id="request-token" placeholder="Token" class="span2" value="" />
+                            <input type="text" name="request-url" id="request-url" placeholder="url" class="span4" value="" />
+                            <a href="javascript:;" class="btn span2 pull-right" id="request-send">Send</a>
+                            
+                            <div id="request-data" class="form-horizontal" style="padding:10px;">
+
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="row-fluid">
+                    
+                <div class="span12 well">
+
+                    <h2>RESPONSE</h2>
+
+                    <div id="response-data"></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </body>
+    
+</html>

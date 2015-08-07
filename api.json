@@ -1,0 +1,21 @@
+{
+	"baseUrl": "http://localhost:8080/springJWT/",
+	"apis": [
+		{
+			"api": "authenticate",
+			"parameters": {
+				"username": "admin",
+				"password": "admin"
+			}
+		},
+		{
+			"api": "register",
+			"parameters": {
+				"firstname": "",
+				"lastname": "",
+				"username": "",
+				"password": ""
+			}
+		}
+	]
+}
